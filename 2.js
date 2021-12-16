@@ -8,7 +8,6 @@ class TimersManager{
         if(t.name !== '' && typeof t.name === 'string' &&  typeof t.name !== 'undefined' && typeof t.delay !== 'undefined'
             && typeof t.delay === 'number' && t.delay>0 && t.delay<5000 && typeof t.interval !== 'undefined' && typeof t.interval === 'boolean'
             && typeof t.job !== 'undefined' && typeof t.job === 'function'){
-            t.job(args[0],args[1])
             if(this.timers.length === 0){
                 this.timers.push(t);
             }
@@ -39,12 +38,12 @@ class TimersManager{
         }else {
             this.timers.forEach(((value, index) => {
                 if(value.interval === true){
-                    this.timersId[index] = setInterval(value.job, value.delay,3,3);
-                    this._log(value,3,3);
+                    this.timersId[index] = setInterval(value.result = value.job, value.delay,3,3);
+                    this._log(value,value.job(3,3),3,3);
                 }
                 else {
-                    this.timersId[index] = setTimeout(value.job, value.delay,3,3);
-                    this._log(value,3,3);
+                    this.timersId[index] = setTimeout(value.result = value.job, value.delay,3,3);
+                    this._log(value,value.job(3,3),3,3);
                 }
             }))
         }
@@ -75,11 +74,11 @@ class TimersManager{
             setInterval(t.job,t.delay,3,3);
         }
     }
-    _log(t,...args){
+    _log(t,result,...args){
         let log = {
             name:t.name,
             in:[args[0],args[1]],
-            out:t.job(args[0],args[1]),
+            out:result,
             created: new Date()
         }
         this.logs.push(log);
@@ -108,7 +107,9 @@ const t2 = {
 manager.add(t1);
 manager.add(t2,3,3);
 manager.start();
-console.log(manager.print());
+setTimeout(()=>{
+    console.log(manager.print());
+},2000);
 //manager.remove(t1);
 //manager.pause(t2);
 //manager.resume(t2);
