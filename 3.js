@@ -2,6 +2,7 @@ class TimersManager{
     constructor() {
         this.timers = [];
         this.timersId=[];
+        this.logs = [];
     }
     add(t,...args){
         if(t.name !== '' && typeof t.name === 'string' &&  typeof t.name !== 'undefined' && typeof t.delay !== 'undefined'
@@ -39,33 +40,42 @@ class TimersManager{
             this.timers.forEach(((value, index) => {
                 if(value.interval === true){
                     this.timersId[index] = setInterval(value.job, value.delay,3,3);
+                    this._log(value,3,3);
                 }
                 else {
                     this.timersId[index] = setTimeout(value.job, value.delay,3,3);
+                    this._log(value,3,3);
                 }
             }))
         }
     }
     stop(){
         this.timersId.forEach(((value, index) => {
-            if(value.interval === false){
-                clearTimeout(value)
-            }
-            else {
-                clearInterval(value)
-            }
+            clearTimeout(value)
         }))
     }
     pause(t){
-        if(t.interval === false){
-            clearTimeout(this.timersId[this.timers.indexOf(t)]);
-        }
-        else {
-            clearInterval(this.timersId[this.timers.indexOf(t)]);
-        }
+        clearTimeout(this.timersId[this.timers.indexOf(t)]);
     }
     resume(t){
         setTimeout(t.job,t.delay,3,3);
+    }
+    _log(t,...args){
+        let log = {
+            name:t.name,
+            in:[args[0],args[1]],
+            out:t.job(args[0],args[1]),
+            created: new Date(),
+            error:{
+                name:"",
+                message:"",
+                stack:""
+            }
+        }
+        this.logs.push(log);
+    }
+    print(){
+        return this.logs;
     }
 }
 const manager = new TimersManager();
@@ -87,7 +97,4 @@ const t2 = {
 
 manager.add(t1);
 manager.add(t2,3,3);
-manager.start();
-//manager.remove(t1);
-//manager.pause(t2);
-//manager.resume(t2);
+

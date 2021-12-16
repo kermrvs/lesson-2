@@ -2,6 +2,7 @@ class TimersManager{
     constructor() {
         this.timers = [];
         this.timersId=[];
+        this.logs = [];
     }
     add(t,...args){
         if(t.name !== '' && typeof t.name === 'string' &&  typeof t.name !== 'undefined' && typeof t.delay !== 'undefined'
@@ -39,9 +40,11 @@ class TimersManager{
             this.timers.forEach(((value, index) => {
                 if(value.interval === true){
                     this.timersId[index] = setInterval(value.job, value.delay,3,3);
+                    this._log(value,3,3);
                 }
                 else {
                     this.timersId[index] = setTimeout(value.job, value.delay,3,3);
+                    this._log(value,3,3);
                 }
             }))
         }
@@ -65,7 +68,24 @@ class TimersManager{
         }
     }
     resume(t){
-        setTimeout(t.job,t.delay,3,3);
+        if(t.interval === false){
+            setTimeout(t.job,t.delay,3,3);
+        }
+        else {
+            setInterval(t.job,t.delay,3,3);
+        }
+    }
+    _log(t,...args){
+        let log = {
+            name:t.name,
+            in:[args[0],args[1]],
+            out:t.job(args[0],args[1]),
+            created: new Date()
+        }
+        this.logs.push(log);
+    }
+    print(){
+        return this.logs;
     }
 }
 const manager = new TimersManager();
@@ -88,6 +108,7 @@ const t2 = {
 manager.add(t1);
 manager.add(t2,3,3);
 manager.start();
+console.log(manager.print());
 //manager.remove(t1);
 //manager.pause(t2);
 //manager.resume(t2);
