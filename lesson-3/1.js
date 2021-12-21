@@ -38,10 +38,6 @@ bank.on('get', (personId, cb) => {
   cb(bank.persons[personId].balance);
 });
 
-function cb(balance) {
-  return balance;
-}
-
 bank.on('withdraw', (personId, sum) => {
   if (sum > bank.persons[personId].balance)
     throw new Error('You try to withdraw more sum then you have');

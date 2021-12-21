@@ -31,8 +31,7 @@ bank.on('error', error => {
 
 bank.on('send', (personFirstId, personSecondId, sum) => {
   if (sum <= 0) throw new Error('Sum <= 0');
-  const mass = [personFirstId, personSecondId];
-  mass.forEach((value, index) => {
+  bank.persons.forEach((value, index) => {
     if (index === personFirstId || index === personSecondId) {
     } else {
       throw new Error('Error');
@@ -52,10 +51,6 @@ bank.on('get', (personId, cb) => {
   cb(bank.persons[personId].balance);
 });
 
-function cb(balance) {
-  return balance;
-}
-
 bank.on('withdraw', (personId, sum) => {
   if (sum > bank.persons[personId].balance)
     throw new Error('You try to withdraw more sum then you have');
@@ -64,15 +59,16 @@ bank.on('withdraw', (personId, sum) => {
 });
 
 try {
-  bank.emit('get', personFirstId, balance => {
-    console.log(`I have ${balance}`);
+  bank.emit('get', personFirstId, cb => {
+    console.log(`I have ${cb}`);
   });
 
   bank.emit('get', personSecondId, balance => {
     console.log(`I have ${balance}`);
+    console.log(true);
   });
 
-  bank.emit('send', personFirstId, personSecondId3, 50);
+  bank.emit('send', personFirstId, personSecondId, 50);
 
   bank.emit('get', personFirstId, balance => {
     console.log(`I have ${balance}`);
