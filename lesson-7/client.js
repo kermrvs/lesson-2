@@ -3,16 +3,22 @@ const { Socket } = require('net');
 const client = new Socket();
 
 const filter = {
-  name: {
-    first: 'on',
-    last: 'd',
+  filter: {
+    name: {
+      first: 'on',
+      last: 'd',
+    },
+    phone: '56',
+    address: {
+      zip: '1234',
+      city: 'Kyiv',
+      country: 'ukr',
+      street: 'so',
+    },
   },
-  phone: '56',
-  address: {
-    zip: '1234',
-    city: 'Kyiv',
-    country: 'ukr',
-    street: 'so',
+  meta: {
+    format: 'csv',
+    archive: true,
   },
 };
 
