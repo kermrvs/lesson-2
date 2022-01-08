@@ -9,20 +9,25 @@ const server = net.createServer();
 const pathToFile = path.join(__dirname, '/data/users.json');
 const pathToCsv = path.join(__dirname, '/data/users.csv');
 const pathToZip = path.join(__dirname, '/data/users.csv.zip');
+const pathToJson = path.join(__dirname, '/data/users2.json');
+
 let dataOfFile = [];
 const arrayWithDataToClient = [];
 let body = '';
+let fullBody = '';
 
 server.on('connection', socket => {
-  socket.on('data', msg => {
-    const obj = JSON.parse(msg);
+  socket.on('data', async msg => {
+    const obj = JSON.parse(msg.toString());
+
     const {
       filter,
       meta: { format, archive },
     } = obj;
+
     const newObj = {};
 
-    dataOfFile.forEach(value => {
+    for await (const value of dataOfFile) {
       for (const key in filter) {
         if (value.hasOwnProperty(key)) {
           if (
@@ -45,53 +50,57 @@ server.on('connection', socket => {
           }
         }
       }
+
       body = body.slice(0, body.length - 1) + '\n';
+
       arrayWithDataToClient.push(newObj);
+    }
 
-      let headers = '';
-      for (const key in filter) {
-        if (typeof filter[key] === 'object') {
-          for (const keyObj in filter[key]) {
-            headers += `${keyObj},`;
-          }
-        } else {
-          headers += `${key},`;
-        }
-      }
-      if (format === 'csv' && archive) {
-        try {
-          const x = async () => {
-            await fs.promises.writeFile(
-              pathToCsv,
-              headers.slice(0, headers.length - 1) + '\n',
-            );
-            await fs.promises.appendFile(pathToCsv, body);
-            const zip = zlib.createGzip();
-            const read = fs.createReadStream(pathToCsv);
-            const write = fs.createWriteStream(pathToZip);
-            pipeline(read, zip, write, error => {
-              if (error) throw error;
-            });
-            pipeline(read, socket, error => {
-              if (error) throw error;
-            });
-          };
-          x();
-        } catch (e) {
-          console.error(e);
-        }
-      }
-    });
+    let headers = '';
 
-    server.close();
+    for (const key in filter) {
+      if (typeof filter[key] === 'object') {
+        for (const keyObj in filter[key]) {
+          headers += `${keyObj},`;
+        }
+      } else {
+        headers += `${key},`;
+      }
+    }
+
+    if (format === 'csv' && !archive) {
+      fullBody = headers.slice(0, headers.length - 1) + '\n' + body;
+      socket.write(fullBody);
+    }
+    if (archive && format !== 'csv') {
+      await fs.writeFile(
+        pathToJson,
+        JSON.stringify(arrayWithDataToClient),
+        error => {
+          if (error) throw error;
+        },
+      );
+      const read = fs.createReadStream(pathToJson);
+      const zip = zlib.createGzip();
+      read.pipe(zip).pipe(socket);
+    }
+    if (archive && format === 'csv') {
+      fullBody = headers.slice(0, headers.length - 1) + '\n' + body;
+      await fs.writeFile(pathToCsv, fullBody, error => {
+        if (error) throw error;
+      });
+      const read = fs.createReadStream(pathToCsv);
+      const zip = zlib.createGzip();
+      read.pipe(zip).pipe(socket);
+    }
   });
 });
 
-server.on('listening', () => {
+server.on('listening', async () => {
   console.log('Server started');
-  fs.promises.readFile(pathToFile).then(data => {
-    dataOfFile = JSON.parse(data.toString());
-  });
+  const data = await fs.promises.readFile(pathToFile);
+
+  dataOfFile = JSON.parse(data.toString());
 });
 
 server.listen(8081);

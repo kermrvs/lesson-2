@@ -28,6 +28,5 @@ client.connect(8081, () => {
 });
 
 client.on('data', data => {
-  console.log(data);
-  client.end();
+  console.log(data.toString());
 });
